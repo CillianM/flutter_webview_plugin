@@ -334,6 +334,12 @@ class WebviewManager {
         return EMPTY;
     }
 
+    private void setCookies(String url, ArrayList<String> cookies) {
+        for (String cookie : cookies) {
+            CookieManager.getInstance().setCookie(url, cookie);
+        }
+    }
+
     private void clearCookies() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             CookieManager.getInstance().removeAllCookies(new ValueCallback<Boolean>() {
@@ -364,6 +370,7 @@ class WebviewManager {
             boolean clearCache,
             boolean hidden,
             boolean clearCookies,
+            ArrayList<String> cookies,
             boolean mediaPlaybackRequiresUserGesture,
             String userAgent,
             String url,
@@ -430,6 +437,10 @@ class WebviewManager {
 
         if (clearCookies) {
             clearCookies();
+        }
+
+        if (cookies != null && !cookies.isEmpty()) {
+            setCookies(url, cookies);
         }
 
         if (userAgent != null) {

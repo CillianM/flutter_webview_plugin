@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -28,6 +29,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Cookie testCookie = new Cookie('TESTCOOKIE', 'TESTVALUE');
+    testCookie.httpOnly = false;
+    testCookie.path = '/';
+    testCookie.domain = selectedUrl;
+    testCookie.secure = true;
+
     return MaterialApp(
       title: 'Flutter WebView Demo',
       theme: ThemeData(
@@ -42,10 +49,14 @@ class MyApp extends StatelessWidget {
             mediaPlaybackRequiresUserGesture: false,
             appBar: AppBar(
               title: const Text('Widget WebView'),
+              actions: <Widget>[
+                SampleMenu(flutterWebViewPlugin),
+              ],
             ),
             withZoom: true,
             withLocalStorage: true,
             hidden: true,
+            cookies: [testCookie],
             initialChild: Container(
               color: Colors.redAccent,
               child: const Center(
@@ -297,5 +308,54 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+}
+
+enum MenuOptions {
+  showUserAgent,
+  listCookies,
+}
+
+class SampleMenu extends StatelessWidget {
+
+  final FlutterWebviewPlugin flutterWebviewPlugin;
+
+  SampleMenu(this.flutterWebviewPlugin);
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<MenuOptions>(
+      onSelected: (MenuOptions value) {
+        switch (value) {
+          case MenuOptions.listCookies:
+            _onListCookies();
+            break;
+          default:
+            break;
+        }
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuItem<MenuOptions>>[
+        const PopupMenuItem<MenuOptions>(
+          value: MenuOptions.listCookies,
+          child: Text('List cookies'),
+        ),
+      ],
+    );
+  }
+
+  void _onShowUserAgent() async {
+    // Send a message with the user agent string to the Toaster JavaScript channel we registered
+    // with the WebView.
+    await flutterWebviewPlugin.evalJavascript(
+        'Toaster.postMessage("User Agent: " + navigator.userAgent);');
+  }
+
+  void _onListCookies() async {
+    flutterWebviewPlugin.getCookies().then((m) {
+
+      for(String key in m.keys) {
+        print('cookie $key = ${m[key]}');
+      }
+    });
   }
 }
